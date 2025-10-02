@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using OrderManagement.Application.Common;
 using OrderManagement.Domain.Entities;
-using OrderManagement.Domain.ValueObjetcs;
+using OrderManagement.Domain.ValueObjects;
 
 namespace OrderManagement.Application.Commands.CreateOrder
 {

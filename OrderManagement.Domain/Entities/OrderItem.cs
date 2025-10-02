@@ -1,5 +1,5 @@
 ﻿using OrderManagement.Domain.Common;
-using OrderManagement.Domain.ValueObjetcs;
+using OrderManagement.Domain.ValueObjects;
 
 namespace OrderManagement.Domain.Entities
 {

@@ -1,6 +1,6 @@
 ﻿using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Entities;
-using OrderManagement.Domain.ValueObjetcs;
+using OrderManagement.Domain.ValueObjects;
 
 namespace OrderManagement.Domain.Events
 {

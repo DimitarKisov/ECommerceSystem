@@ -1,7 +1,7 @@
 ﻿using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Enums;
 using OrderManagement.Domain.Events;
-using OrderManagement.Domain.ValueObjetcs;
+using OrderManagement.Domain.ValueObjects;
 
 namespace OrderManagement.Domain.Entities
 {
