@@ -1,6 +1,6 @@
 ﻿using OrderManagement.Domain.Common;
 
-namespace OrderManagement.Domain.ValueObjetcs
+namespace OrderManagement.Domain.ValueObjects
 {
     /// <summary>
     /// Value object за адрес
