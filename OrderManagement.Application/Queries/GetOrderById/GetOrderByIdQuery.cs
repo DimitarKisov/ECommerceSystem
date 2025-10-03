@@ -11,21 +11,18 @@ namespace OrderManagement.Application.Queries.GetOrderById
 
         internal class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, Result<OrderDto>>
         {
-            private readonly OrderDbContext _dbContext;
+            private readonly IOrderService _orderService;
 
-            public GetOrderByIdQueryHandler(OrderDbContext dbContext)
+            public GetOrderByIdQueryHandler(IOrderService orderService)
             {
-                _dbContext = dbContext;
+                _orderService = orderService;
             }
 
             public async Task<Result<OrderDto>> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
             {
                 try
                 {
-                    var order = await _dbContext.Orders
-                        .Include(o => o.Items)
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
+                    var order = await _orderService.GetByIdWithItemsAsync(request.OrderId, cancellationToken);
 
                     if (order == null)
                     {

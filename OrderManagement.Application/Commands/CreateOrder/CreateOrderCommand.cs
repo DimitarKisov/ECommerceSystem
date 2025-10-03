@@ -16,18 +16,17 @@ namespace OrderManagement.Application.Commands.CreateOrder
 
         internal class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Result<Guid>>
         {
-            private readonly OrderDbContext _dbContext;
+            private readonly IOrderService _orderService;
 
-            public CreateOrderCommandHandler(OrderDbContext dbContext)
+            public CreateOrderCommandHandler(IOrderService orderService)
             {
-                _dbContext = dbContext;
+                _orderService = orderService;
             }
 
             public async Task<Result<Guid>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
             {
                 try
                 {
-                    // Създаваме адрес value object
                     var address = new Address(
                         request.ShippingAddress.Street,
                         request.ShippingAddress.City,
@@ -35,19 +34,16 @@ namespace OrderManagement.Application.Commands.CreateOrder
                         request.ShippingAddress.Country
                     );
 
-                    // Създаваме поръчката
                     var order = Order.Create(request.CustomerId, address);
 
-                    // Добавяме продуктите
                     foreach (var item in request.Items)
                     {
                         var unitPrice = new Money(item.UnitPrice);
                         order.AddItem(item.ProductId, item.ProductName, unitPrice, item.Quantity);
                     }
 
-                    // Записваме в базата
-                    await _dbContext.Orders.AddAsync(order, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    _orderService.Add(order);
+                    await _orderService.SaveChangesAsync(cancellationToken);
 
                     return Result<Guid>.Success(order.Id);
                 }

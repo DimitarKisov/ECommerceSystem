@@ -9,19 +9,18 @@ namespace OrderManagement.Application.Commands.DeliverOrder
 
         internal class DeliverOrderCommandHandler : IRequestHandler<DeliverOrderCommand, Result<bool>>
         {
-            private readonly OrderDbContext _dbContext;
+            private readonly IOrderService _orderService;
 
-            public DeliverOrderCommandHandler(OrderDbContext dbContext)
+            public DeliverOrderCommandHandler(IOrderService orderService)
             {
-                _dbContext = dbContext;
+                _orderService = orderService;
             }
 
             public async Task<Result<bool>> Handle(DeliverOrderCommand request, CancellationToken cancellationToken)
             {
                 try
                 {
-                    var order = await _dbContext.Orders
-                        .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
+                    var order = await _orderService.GetByIdAsync(request.OrderId, cancellationToken);
 
                     if (order == null)
                     {
@@ -29,7 +28,7 @@ namespace OrderManagement.Application.Commands.DeliverOrder
                     }
 
                     order.MarkAsDelivered();
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _orderService.SaveChangesAsync(cancellationToken);
 
                     return Result<bool>.Success(true);
                 }

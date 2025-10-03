@@ -11,32 +11,28 @@ namespace OrderManagement.Application.Queries.GetOrdersByCustomer
 
         internal class GetOrdersByCustomerQueryHandler : IRequestHandler<GetOrdersByCustomerQuery, Result<List<OrderSummaryDto>>>
         {
-            private readonly OrderDbContext _dbContext;
+            private readonly IOrderService _orderService;
 
-            public GetOrdersByCustomerQueryHandler(OrderDbContext dbContext)
+            public GetOrdersByCustomerQueryHandler(IOrderService orderService)
             {
-                _dbContext = dbContext;
+                _orderService = orderService;
             }
 
             public async Task<Result<List<OrderSummaryDto>>> Handle(GetOrdersByCustomerQuery request, CancellationToken cancellationToken)
             {
                 try
                 {
-                    var summaries = await _dbContext.Orders
-                        .Include(o => o.Items)
-                        .AsNoTracking()
-                        .Where(o => o.CustomerId == request.CustomerId)
-                        .OrderByDescending(o => o.OrderDate)
-                        .Select(o => new OrderSummaryDto
-                        {
-                            Id = o.Id,
-                            OrderNumber = o.OrderNumber,
-                            OrderDate = o.OrderDate,
-                            Status = o.Status.ToString(),
-                            TotalAmount = o.TotalAmount.Amount,
-                            ItemsCount = o.Items.Count
-                        })
-                        .ToListAsync(cancellationToken);
+                    var orders = await _orderService.GetByCustomerIdAsync(request.CustomerId, cancellationToken);
+
+                    var summaries = orders.Select(o => new OrderSummaryDto
+                    {
+                        Id = o.Id,
+                        OrderNumber = o.OrderNumber,
+                        OrderDate = o.OrderDate,
+                        Status = o.Status.ToString(),
+                        TotalAmount = o.TotalAmount.Amount,
+                        ItemsCount = o.Items.Count
+                    }).ToList();
 
                     return Result<List<OrderSummaryDto>>.Success(summaries);
                 }

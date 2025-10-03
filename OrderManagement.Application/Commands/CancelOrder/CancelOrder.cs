@@ -10,19 +10,18 @@ namespace OrderManagement.Application.Commands.CancelOrder
 
         internal class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, Result<bool>>
         {
-            private readonly OrderDbContext _dbContext;
+            private readonly IOrderService _orderService;
 
-            public CancelOrderCommandHandler(OrderDbContext dbContext)
+            public CancelOrderCommandHandler(IOrderService orderService)
             {
-                _dbContext = dbContext;
+                _orderService = orderService;
             }
 
             public async Task<Result<bool>> Handle(CancelOrderCommand request, CancellationToken cancellationToken)
             {
                 try
                 {
-                    var order = await _dbContext.Orders
-                        .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
+                    var order = await _orderService.GetByIdAsync(request.OrderId, cancellationToken);
 
                     if (order == null)
                     {
@@ -30,7 +29,7 @@ namespace OrderManagement.Application.Commands.CancelOrder
                     }
 
                     order.Cancel(request.Reason);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _orderService.SaveChangesAsync(cancellationToken);
 
                     return Result<bool>.Success(true);
                 }

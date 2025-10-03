@@ -19,8 +19,8 @@ namespace OrderManagement.Infrastructure.Data
             _mediator = mediator;
         }
 
-        public DbSet<Order> Orders => Set<Order>();
-        public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

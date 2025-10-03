@@ -12,20 +12,18 @@ namespace OrderManagement.Application.Commands.ConfirmOrder
 
         internal class ConfirmOrderCommandHandler : IRequestHandler<ConfirmOrderCommand, Result<bool>>
         {
-            private readonly OrderDbContext _dbContext;
+            private readonly IOrderService _orderService;
 
-            public ConfirmOrderCommandHandler(OrderDbContext dbContext)
+            public ConfirmOrderCommandHandler(IOrderService orderService)
             {
-                _dbContext = dbContext;
+                _orderService = orderService;
             }
 
             public async Task<Result<bool>> Handle(ConfirmOrderCommand request, CancellationToken cancellationToken)
             {
                 try
                 {
-                    var order = await _dbContext.Orders
-                        .Include(o => o.Items)
-                        .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
+                    var order = await _orderService.GetByIdWithItemsAsync(request.OrderId, cancellationToken);
 
                     if (order == null)
                     {
@@ -33,7 +31,7 @@ namespace OrderManagement.Application.Commands.ConfirmOrder
                     }
 
                     order.Confirm();
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _orderService.SaveChangesAsync(cancellationToken);
 
                     return Result<bool>.Success(true);
                 }

@@ -9,19 +9,18 @@ namespace OrderManagement.Application.Commands.ShipOrder
 
         internal class ShipOrderCommandHandler : IRequestHandler<ShipOrderCommand, Result<bool>>
         {
-            private readonly OrderDbContext _dbContext;
+            private readonly IOrderService _orderService;
 
-            public ShipOrderCommandHandler(OrderDbContext dbContext)
+            public ShipOrderCommandHandler(IOrderService orderService)
             {
-                _dbContext = dbContext;
+                _orderService = orderService;
             }
 
             public async Task<Result<bool>> Handle(ShipOrderCommand request, CancellationToken cancellationToken)
             {
                 try
                 {
-                    var order = await _dbContext.Orders
-                        .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
+                    var order = await _orderService.GetByIdAsync(request.OrderId, cancellationToken);
 
                     if (order == null)
                     {
@@ -29,7 +28,7 @@ namespace OrderManagement.Application.Commands.ShipOrder
                     }
 
                     order.MarkAsShipped();
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _orderService.SaveChangesAsync(cancellationToken);
 
                     return Result<bool>.Success(true);
                 }
