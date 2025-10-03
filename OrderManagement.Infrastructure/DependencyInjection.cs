@@ -5,6 +5,7 @@ using OrderManagement.Application.Common;
 using OrderManagement.Infrastructure.Data;
 using OrderManagement.Infrastructure.Messaging;
 using OrderManagement.Infrastructure.Repositories;
+using System.Reflection;
 
 namespace OrderManagement.Infrastructure
 {
@@ -28,6 +29,10 @@ namespace OrderManagement.Infrastructure
 
             // Регистрираме MessageBus за RabbitMQ
             services.AddSingleton<IMessageBus, RabbitMqMessageBus>();
+
+            // Регистрираме MediatR за domain event handlers
+            services.AddMediatR(cfg =>
+                cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
             return services;
         }
