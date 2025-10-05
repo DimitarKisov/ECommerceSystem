@@ -1,6 +1,89 @@
-@OrderManagement.API_HostAddress = http://localhost:5095
+﻿@OrderManagement.API_HostAddress = http://localhost:5095
+@token = YOUR_JWT_TOKEN_HERE
 
-GET {{OrderManagement.API_HostAddress}}/weatherforecast/
+### Health Check
+GET {{OrderManagement.API_HostAddress}}/health
 Accept: application/json
 
-###
+### Detailed Health Check
+GET {{OrderManagement.API_HostAddress}}/api/health/detailed
+Accept: application/json
+
+### Version Info
+GET {{OrderManagement.API_HostAddress}}/api/health/version
+Accept: application/json
+
+### Create Order
+POST {{OrderManagement.API_HostAddress}}/api/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "customerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "shippingAddress": {
+    "street": "ул. Витоша 100",
+    "city": "София",
+    "postalCode": "1000",
+    "country": "България"
+  },
+  "items": [
+    {
+      "productId": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
+      "productName": "Лаптоп Lenovo ThinkPad",
+      "unitPrice": 1299.99,
+      "quantity": 1
+    },
+    {
+      "productId": "3fa85f64-5717-4562-b3fc-2c963f66afa8",
+      "productName": "Мишка Logitech MX Master",
+      "unitPrice": 99.99,
+      "quantity": 2
+    }
+  ]
+}
+
+### Get Order by ID
+@orderId = 3fa85f64-5717-4562-b3fc-2c963f66afa6
+GET {{OrderManagement.API_HostAddress}}/api/orders/{{orderId}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Get Order by Number
+@orderNumber = ORD-20250103-ABC12345
+GET {{OrderManagement.API_HostAddress}}/api/orders/by-number/{{orderNumber}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Get Orders by Customer
+@customerId = 3fa85f64-5717-4562-b3fc-2c963f66afa6
+GET {{OrderManagement.API_HostAddress}}/api/orders/customer/{{customerId}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Confirm Order
+@orderId = 3fa85f64-5717-4562-b3fc-2c963f66afa6
+POST {{OrderManagement.API_HostAddress}}/api/orders/{{orderId}}/confirm
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Cancel Order
+@orderId = 3fa85f64-5717-4562-b3fc-2c963f66afa6
+POST {{OrderManagement.API_HostAddress}}/api/orders/{{orderId}}/cancel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reason": "Клиентът поиска отмяна на поръчката"
+}
+
+### Ship Order
+@orderId = 3fa85f64-5717-4562-b3fc-2c963f66afa6
+POST {{OrderManagement.API_HostAddress}}/api/orders/{{orderId}}/ship
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Deliver Order
+@orderId = 3fa85f64-5717-4562-b3fc-2c963f66afa6
+POST {{OrderManagement.API_HostAddress}}/api/orders/{{orderId}}/deliver
+Authorization: Bearer {{token}}
+Content-Type: application/json
