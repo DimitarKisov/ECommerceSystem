@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using OrderManagement.Application.Common;
-
-using static OrderManagement.Application.Queries.GetOrderById.GetOrderByIdQuery;
+using OrderManagement.Application.DTOs;
 
 namespace OrderManagement.Application.Queries.GetOrderByNumber
 {
@@ -22,42 +21,12 @@ namespace OrderManagement.Application.Queries.GetOrderByNumber
             {
                 try
                 {
-                    var order = await _orderService.GetByNumberWithItemsAsync(request.OrderNumber, cancellationToken);
+                    var orderDto = await _orderService.GetOrderDtoByNumberAsync(request.OrderNumber, cancellationToken);
 
-                    if (order == null)
+                    if (orderDto == null)
                     {
                         return Result<OrderDto>.Failure($"Поръчка с номер {request.OrderNumber} не е намерена");
                     }
-
-                    var orderDto = new OrderDto
-                    {
-                        Id = order.Id,
-                        OrderNumber = order.OrderNumber,
-                        CustomerId = order.CustomerId,
-                        OrderDate = order.OrderDate,
-                        Status = order.Status.ToString(),
-                        ShippingAddress = new AddressDto
-                        {
-                            Street = order.ShippingAddress.Street,
-                            City = order.ShippingAddress.City,
-                            PostalCode = order.ShippingAddress.PostalCode,
-                            Country = order.ShippingAddress.Country
-                        },
-                        TotalAmount = order.TotalAmount.Amount,
-                        Currency = order.TotalAmount.Currency,
-                        ShippedDate = order.ShippedDate,
-                        DeliveredDate = order.DeliveredDate,
-                        CancellationReason = order.CancellationReason,
-                        Items = order.Items.Select(i => new OrderItemDto
-                        {
-                            Id = i.Id,
-                            ProductId = i.ProductId,
-                            ProductName = i.ProductName,
-                            UnitPrice = i.UnitPrice.Amount,
-                            Quantity = i.Quantity,
-                            Subtotal = i.Subtotal.Amount
-                        }).ToList()
-                    };
 
                     return Result<OrderDto>.Success(orderDto);
                 }

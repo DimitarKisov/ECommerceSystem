@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using OrderManagement.Application.Common;
-
-using static OrderManagement.Application.Queries.GetOrdersByCustomer.GetOrdersByCustomerQuery;
+using OrderManagement.Application.DTOs;
 
 namespace OrderManagement.Application.Queries.GetOrdersByCustomer
 {
@@ -18,21 +17,15 @@ namespace OrderManagement.Application.Queries.GetOrdersByCustomer
                 _orderService = orderService;
             }
 
-            public async Task<Result<List<OrderSummaryDto>>> Handle(GetOrdersByCustomerQuery request, CancellationToken cancellationToken)
+            public async Task<Result<List<OrderSummaryDto>>> Handle(
+                GetOrdersByCustomerQuery request,
+                CancellationToken cancellationToken)
             {
                 try
                 {
-                    var orders = await _orderService.GetByCustomerIdAsync(request.CustomerId, cancellationToken);
-
-                    var summaries = orders.Select(o => new OrderSummaryDto
-                    {
-                        Id = o.Id,
-                        OrderNumber = o.OrderNumber,
-                        OrderDate = o.OrderDate,
-                        Status = o.Status.ToString(),
-                        TotalAmount = o.TotalAmount.Amount,
-                        ItemsCount = o.Items.Count
-                    }).ToList();
+                    var summaries = await _orderService.GetOrdersByCustomerIdAsync(
+                        request.CustomerId,
+                        cancellationToken);
 
                     return Result<List<OrderSummaryDto>>.Success(summaries);
                 }
@@ -41,16 +34,6 @@ namespace OrderManagement.Application.Queries.GetOrdersByCustomer
                     return Result<List<OrderSummaryDto>>.Failure($"Грешка при извличане на поръчки: {ex.Message}");
                 }
             }
-        }
-
-        public class OrderSummaryDto
-        {
-            public Guid Id { get; set; }
-            public string OrderNumber { get; set; }
-            public DateTime OrderDate { get; set; }
-            public string Status { get; set; }
-            public decimal TotalAmount { get; set; }
-            public int ItemsCount { get; set; }
         }
     }
 }
