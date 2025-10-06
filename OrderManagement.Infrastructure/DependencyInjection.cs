@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OrderManagement.Application.Common;
 using OrderManagement.Infrastructure.Data;
 using OrderManagement.Infrastructure.Messaging;
-using OrderManagement.Infrastructure.Repositories;
+using OrderManagement.Infrastructure.Services;
 using System.Reflection;
 
 namespace OrderManagement.Infrastructure

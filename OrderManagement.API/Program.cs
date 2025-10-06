@@ -150,6 +150,14 @@ app.MapGet("/health", () => Results.Ok(new
 .WithTags("Health")
 .AllowAnonymous();
 
+// Database initialization
+if (app.Environment.IsDevelopment())
+{
+    Log.Information("Initializing database...");
+    await OrderManagement.Infrastructure.Data.DbInitializer.InitializeAsync(app.Services);
+    Log.Information("Database initialized successfully");
+}
+
 Log.Information("Starting Order Management API");
 
 app.Run();

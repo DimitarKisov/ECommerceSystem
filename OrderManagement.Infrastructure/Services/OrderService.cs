@@ -3,7 +3,7 @@ using OrderManagement.Application.Common;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Infrastructure.Data;
 
-namespace OrderManagement.Infrastructure.Repositories
+namespace OrderManagement.Infrastructure.Services
 {
     /// <summary>
     /// Repository за работа с Orders
