@@ -1,6 +1,131 @@
-@Identity.API_HostAddress = http://localhost:5161
+﻿@Identity.API_HostAddress = http://localhost:5161
+@token = YOUR_JWT_TOKEN_HERE
 
-GET {{Identity.API_HostAddress}}/weatherforecast/
+### Health Check
+GET {{Identity.API_HostAddress}}/health
 Accept: application/json
 
-###
+### Detailed Health Check
+GET {{Identity.API_HostAddress}}/api/health/detailed
+Accept: application/json
+
+### Version Info
+GET {{Identity.API_HostAddress}}/api/health/version
+Accept: application/json
+
+### Register New User
+POST {{Identity.API_HostAddress}}/api/identity/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test123!",
+  "confirmPassword": "Test123!",
+  "firstName": "Тест",
+  "lastName": "Потребител",
+  "phoneNumber": "+359888123456"
+}
+
+### Login User
+# @name loginRequest
+POST {{Identity.API_HostAddress}}/api/identity/login
+Content-Type: application/json
+
+{
+  "email": "admin@ecommerce.bg",
+  "password": "Admin123!",
+  "rememberMe": false
+}
+
+### Extract token from login response
+@token = {{loginRequest.response.body.$.data.accessToken}}
+@refreshToken = {{loginRequest.response.body.$.data.refreshToken}}
+
+### Get User Profile
+GET {{Identity.API_HostAddress}}/api/identity/profile
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Update User Profile
+PUT {{Identity.API_HostAddress}}/api/identity/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "Обновено",
+  "lastName": "Име",
+  "phoneNumber": "+359888999888"
+}
+
+### Change Password
+POST {{Identity.API_HostAddress}}/api/identity/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "Admin123!",
+  "newPassword": "NewPassword123!",
+  "confirmNewPassword": "NewPassword123!"
+}
+
+### Refresh Token
+POST {{Identity.API_HostAddress}}/api/identity/refresh-token
+Content-Type: application/json
+
+{
+  "accessToken": "{{token}}",
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Validate Token
+GET {{Identity.API_HostAddress}}/api/identity/validate-token
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Logout
+POST {{Identity.API_HostAddress}}/api/identity/logout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Forgot Password
+POST {{Identity.API_HostAddress}}/api/identity/forgot-password
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+### Reset Password (ще се нуждае от валиден token от email)
+POST {{Identity.API_HostAddress}}/api/identity/reset-password
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "token": "RESET_TOKEN_FROM_EMAIL",
+  "newPassword": "NewPassword123!",
+  "confirmNewPassword": "NewPassword123!"
+}
+
+### Confirm Email (ще се нуждае от валиден token от email)
+GET {{Identity.API_HostAddress}}/api/identity/confirm-email?userId=USER_ID&token=EMAIL_CONFIRMATION_TOKEN
+Accept: application/json
+
+### Test with Customer User
+POST {{Identity.API_HostAddress}}/api/identity/login
+Content-Type: application/json
+
+{
+  "email": "customer1@test.bg",
+  "password": "Test123!",
+  "rememberMe": false
+}
+
+### Test with Employee User
+POST {{Identity.API_HostAddress}}/api/identity/login
+Content-Type: application/json
+
+{
+  "email": "employee@test.bg",
+  "password": "Test123!",
+  "rememberMe": false
+}
