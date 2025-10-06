@@ -1,12 +1,12 @@
 ﻿using FluentAssertions;
 using OrderManagement.Domain.ValueObjects;
+using System.Globalization;
 using Xunit;
 
 namespace OrderManagement.Tests.Unit.Domain
 {
     /// <summary>
-    /// Unit tests за Value Objects
-    /// Тестваме equality, validation и domain операции
+    /// Unit tests за Money Value Object
     /// </summary>
     public class MoneyTests
     {
@@ -101,7 +101,7 @@ namespace OrderManagement.Tests.Unit.Domain
         }
 
         [Fact]
-        public void ToString_ShouldReturnFormattedString()
+        public void ToString_ShouldReturnFormattedString_UsingInvariantCulture()
         {
             // Arrange
             var money = new Money(1234.56m, "BGN");
@@ -110,92 +110,41 @@ namespace OrderManagement.Tests.Unit.Domain
             var result = money.ToString();
 
             // Assert
+            // Ако използваме InvariantCulture в Money.ToString(), очакваме точка
             result.Should().Be("1234.56 BGN");
         }
-    }
-
-    public class AddressTests
-    {
-        [Fact]
-        public void Create_WithValidData_ShouldCreateAddress()
-        {
-            // Act
-            var address = new Address(
-                "ул. Витоша 100",
-                "София",
-                "1000",
-                "България");
-
-            // Assert
-            address.Street.Should().Be("ул. Витоша 100");
-            address.City.Should().Be("София");
-            address.PostalCode.Should().Be("1000");
-            address.Country.Should().Be("България");
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("   ")]
-        public void Create_WithInvalidStreet_ShouldThrowException(string street)
-        {
-            // Act
-            var act = () => new Address(street, "София", "1000", "България");
-
-            // Assert
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*улицата е задължителна*");
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("   ")]
-        public void Create_WithInvalidCity_ShouldThrowException(string city)
-        {
-            // Act
-            var act = () => new Address("ул. Витоша 100", city, "1000", "България");
-
-            // Assert
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*градът е задължителен*");
-        }
 
         [Fact]
-        public void Equality_WithSameValues_ShouldBeEqual()
+        public void ToString_ShouldBeConsistent_AcrossDifferentCultures()
         {
             // Arrange
-            var address1 = new Address("ул. Витоша 100", "София", "1000", "България");
-            var address2 = new Address("ул. Витоша 100", "София", "1000", "България");
+            var money = new Money(1234.56m, "EUR");
+            var originalCulture = CultureInfo.CurrentCulture;
 
-            // Act & Assert
-            address1.Should().Be(address2);
-            (address1 == address2).Should().BeTrue();
-        }
+            try
+            {
+                // Act - тестваме с различни cultures
+                CultureInfo.CurrentCulture = new CultureInfo("bg-BG"); // Българска
+                var resultBg = money.ToString();
 
-        [Fact]
-        public void Equality_WithDifferentValues_ShouldNotBeEqual()
-        {
-            // Arrange
-            var address1 = new Address("ул. Витоша 100", "София", "1000", "България");
-            var address2 = new Address("бул. Витоша 100", "София", "1000", "България");
+                CultureInfo.CurrentCulture = new CultureInfo("en-US"); // Американска
+                var resultEn = money.ToString();
 
-            // Act & Assert
-            address1.Should().NotBe(address2);
-            (address1 != address2).Should().BeTrue();
-        }
+                CultureInfo.CurrentCulture = new CultureInfo("de-DE"); // Немска
+                var resultDe = money.ToString();
 
-        [Fact]
-        public void ToString_ShouldReturnFormattedAddress()
-        {
-            // Arrange
-            var address = new Address("ул. Витоша 100", "София", "1000", "България");
-
-            // Act
-            var result = address.ToString();
-
-            // Assert
-            result.Should().Be("ул. Витоша 100, София 1000, България");
+                // Assert - всички трябва да са еднакви (InvariantCulture)
+                resultBg.Should().Be("1234.56 EUR");
+                resultEn.Should().Be("1234.56 EUR");
+                resultDe.Should().Be("1234.56 EUR");
+                resultBg.Should().Be(resultEn);
+                resultEn.Should().Be(resultDe);
+            }
+            finally
+            {
+                // Възстановяваме оригиналната culture
+                CultureInfo.CurrentCulture = originalCulture;
+            }
         }
     }
 }

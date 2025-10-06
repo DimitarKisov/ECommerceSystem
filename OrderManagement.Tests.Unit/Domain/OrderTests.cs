@@ -3,7 +3,6 @@ using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Enums;
 using OrderManagement.Domain.Events;
 using OrderManagement.Domain.ValueObjects;
-using System.Net;
 using Xunit;
 
 namespace OrderManagement.Tests.Unit.Domain

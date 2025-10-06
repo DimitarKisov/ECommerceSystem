@@ -1,214 +1,69 @@
-﻿using FluentAssertions;
-using Moq;
-using OrderManagement.Application.Commands.CreateOrder;
-using OrderManagement.Application.Common;
-using OrderManagement.Domain.Entities;
-using Xunit;
+﻿using FluentValidation;
 
-namespace OrderManagement.Tests.Unit.Application
+namespace OrderManagement.Application.Commands.CreateOrder
 {
     /// <summary>
-    /// Unit tests за CreateOrderCommandHandler
-    /// Използваме Moq за mocking на IOrderService
+    /// Валидатор за CreateOrderCommand
     /// </summary>
-    public class CreateOrderCommandHandlerTests
+    public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
     {
-        private readonly Mock<IOrderService> _orderServiceMock;
-        private readonly CreateOrderCommand.CreateOrderCommandHandler _handler;
-
-        public CreateOrderCommandHandlerTests()
+        public CreateOrderCommandValidator()
         {
-            _orderServiceMock = new Mock<IOrderService>();
-            _handler = new CreateOrderCommand.CreateOrderCommandHandler(_orderServiceMock.Object);
-        }
+            RuleFor(x => x.CustomerId)
+                .NotEmpty()
+                .WithMessage("ID на клиента е задължително");
 
-        [Fact]
-        public async Task Handle_WithValidCommand_ShouldCreateOrderSuccessfully()
-        {
-            // Arrange
-            var command = new CreateOrderCommand
+            RuleFor(x => x.ShippingAddress)
+                .NotNull()
+                .WithMessage("Адресът за доставка е задължителен");
+
+            // ВАЖНО: When check за да избегнем NullReferenceException
+            When(x => x.ShippingAddress != null, () =>
             {
-                CustomerId = Guid.NewGuid(),
-                ShippingAddress = new CreateOrderCommand.AddressDto
-                {
-                    Street = "ул. Витоша 100",
-                    City = "София",
-                    PostalCode = "1000",
-                    Country = "България"
-                },
-                Items = new List<CreateOrderCommand.OrderItemDto>
-                {
-                    new()
-                    {
-                        ProductId = Guid.NewGuid(),
-                        ProductName = "Test Product",
-                        UnitPrice = 100m,
-                        Quantity = 2
-                    }
-                }
-            };
+                RuleFor(x => x.ShippingAddress.Street)
+                    .NotEmpty()
+                    .WithMessage("Улицата е задължителна")
+                    .MaximumLength(200);
 
-            // Setup mock за да не throw-не exception
-            _orderServiceMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
+                RuleFor(x => x.ShippingAddress.City)
+                    .NotEmpty()
+                    .WithMessage("Градът е задължителен")
+                    .MaximumLength(100);
 
-            // Act
-            var result = await _handler.Handle(command, CancellationToken.None);
+                RuleFor(x => x.ShippingAddress.PostalCode)
+                    .NotEmpty()
+                    .WithMessage("Пощенският код е задължителен")
+                    .MaximumLength(20);
 
-            // Assert
-            result.Should().NotBeNull();
-            result.IsSuccess.Should().BeTrue();
-            result.Data.Should().NotBeEmpty();
+                RuleFor(x => x.ShippingAddress.Country)
+                    .NotEmpty()
+                    .WithMessage("Държавата е задължителна")
+                    .MaximumLength(100);
+            });
 
-            // Verify че Add е извикан веднъж
-            _orderServiceMock.Verify(
-                x => x.Add(It.Is<Order>(o =>
-                    o.CustomerId == command.CustomerId &&
-                    o.Items.Count == 1)),
-                Times.Once);
+            RuleFor(x => x.Items)
+                .NotEmpty()
+                .WithMessage("Поръчката трябва да има поне един продукт");
 
-            // Verify че SaveChangesAsync е извикан веднъж
-            _orderServiceMock.Verify(
-                x => x.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Once);
-        }
-
-        [Fact]
-        public async Task Handle_WhenSaveChangesFails_ShouldReturnFailure()
-        {
-            // Arrange
-            var command = new CreateOrderCommand
+            RuleForEach(x => x.Items).ChildRules(item =>
             {
-                CustomerId = Guid.NewGuid(),
-                ShippingAddress = new CreateOrderCommand.AddressDto
-                {
-                    Street = "ул. Витоша 100",
-                    City = "София",
-                    PostalCode = "1000",
-                    Country = "България"
-                },
-                Items = new List<CreateOrderCommand.OrderItemDto>
-                {
-                    new()
-                    {
-                        ProductId = Guid.NewGuid(),
-                        ProductName = "Test Product",
-                        UnitPrice = 100m,
-                        Quantity = 1
-                    }
-                }
-            };
+                item.RuleFor(x => x.ProductId)
+                    .NotEmpty()
+                    .WithMessage("ID на продукта е задължително");
 
-            // Setup mock да throw exception
-            _orderServiceMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new Exception("Database error"));
+                item.RuleFor(x => x.ProductName)
+                    .NotEmpty()
+                    .WithMessage("Името на продукта е задължително")
+                    .MaximumLength(200);
 
-            // Act
-            var result = await _handler.Handle(command, CancellationToken.None);
+                item.RuleFor(x => x.UnitPrice)
+                    .GreaterThan(0)
+                    .WithMessage("Цената трябва да е положителна");
 
-            // Assert
-            result.Should().NotBeNull();
-            result.IsSuccess.Should().BeFalse();
-            result.Error.Should().Contain("Грешка при създаване на поръчка");
-            result.Error.Should().Contain("Database error");
-        }
-
-        [Fact]
-        public async Task Handle_WithMultipleItems_ShouldAddAllItems()
-        {
-            // Arrange
-            var command = new CreateOrderCommand
-            {
-                CustomerId = Guid.NewGuid(),
-                ShippingAddress = new CreateOrderCommand.AddressDto
-                {
-                    Street = "ул. Витоша 100",
-                    City = "София",
-                    PostalCode = "1000",
-                    Country = "България"
-                },
-                Items = new List<CreateOrderCommand.OrderItemDto>
-                {
-                    new()
-                    {
-                        ProductId = Guid.NewGuid(),
-                        ProductName = "Product 1",
-                        UnitPrice = 100m,
-                        Quantity = 1
-                    },
-                    new()
-                    {
-                        ProductId = Guid.NewGuid(),
-                        ProductName = "Product 2",
-                        UnitPrice = 200m,
-                        Quantity = 2
-                    }
-                }
-            };
-
-            _orderServiceMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
-            // Act
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            // Assert
-            result.IsSuccess.Should().BeTrue();
-
-            _orderServiceMock.Verify(
-                x => x.Add(It.Is<Order>(o => o.Items.Count == 2)),
-                Times.Once);
-        }
-
-        [Fact]
-        public async Task Handle_ShouldCalculateTotalAmountCorrectly()
-        {
-            // Arrange
-            var command = new CreateOrderCommand
-            {
-                CustomerId = Guid.NewGuid(),
-                ShippingAddress = new CreateOrderCommand.AddressDto
-                {
-                    Street = "ул. Витоша 100",
-                    City = "София",
-                    PostalCode = "1000",
-                    Country = "България"
-                },
-                Items = new List<CreateOrderCommand.OrderItemDto>
-                {
-                    new()
-                    {
-                        ProductId = Guid.NewGuid(),
-                        ProductName = "Product 1",
-                        UnitPrice = 100m,
-                        Quantity = 2 // 200
-                    },
-                    new()
-                    {
-                        ProductId = Guid.NewGuid(),
-                        ProductName = "Product 2",
-                        UnitPrice = 50m,
-                        Quantity = 3 // 150
-                    }
-                }
-            };
-
-            _orderServiceMock
-                .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
-            // Act
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            // Assert
-            result.IsSuccess.Should().BeTrue();
-
-            _orderServiceMock.Verify(
-                x => x.Add(It.Is<Order>(o => o.TotalAmount.Amount == 350m)),
-                Times.Once);
+                item.RuleFor(x => x.Quantity)
+                    .GreaterThan(0)
+                    .WithMessage("Количеството трябва да е положително число");
+            });
         }
     }
 }

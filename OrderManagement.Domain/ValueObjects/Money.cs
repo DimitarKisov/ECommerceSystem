@@ -1,4 +1,5 @@
 ﻿using OrderManagement.Domain.Common;
+using System.Globalization;
 
 namespace OrderManagement.Domain.ValueObjects
 {
@@ -49,6 +50,11 @@ namespace OrderManagement.Domain.ValueObjects
             yield return Currency;
         }
 
-        public override string ToString() => $"{Amount:F2} {Currency}";
+        /// <summary>
+        /// Използваме InvariantCulture за консистентно форматиране
+        /// независимо от culture settings на системата
+        /// </summary>
+        public override string ToString() =>
+            $"{Amount.ToString("F2", CultureInfo.InvariantCulture)} {Currency}";
     }
 }
